@@ -1,6 +1,8 @@
 faster-whisper
-torch
 transformers
+sentencepiece
+torch
+accelerate
 TTS
 ffmpeg-python
 opencv-python

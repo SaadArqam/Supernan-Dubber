@@ -1,5 +1,6 @@
 from utils.extract import extract_clip, extract_audio
 from utils.transcribe import transcribe_audio
+from utils.translate import translate_kn_to_hi
 
 INPUT_VIDEO = "input.mp4"
 CLIP_VIDEO = "clip.mp4"
@@ -22,6 +23,14 @@ def main():
         f.write(transcript)
 
     print("Transcript saved.")
+    print("Translating to Hindi...")
+    hindi_text = translate_kn_to_hi(transcript)
+
+    print("\n--- HINDI TRANSLATION ---")
+    print(hindi_text)
+
+    with open("hindi.txt", "w") as f:
+        f.write(hindi_text)
 
 if __name__ == "__main__":
     main()
