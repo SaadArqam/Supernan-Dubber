@@ -1,0 +1,8 @@
+faster-whisper
+torch
+transformers
+TTS
+ffmpeg-python
+opencv-python
+numpy
+scipy
