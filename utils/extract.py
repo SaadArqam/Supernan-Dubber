@@ -2,7 +2,7 @@ import subprocess
 
 import subprocess
 
-def extract_clip(input_video, output_video, start_time="00:00:30", duration="15"):
+def extract_clip(input_video, output_video, start_time="00:00:05", duration="15"):
     cmd = [
         "ffmpeg",
         "-y",
