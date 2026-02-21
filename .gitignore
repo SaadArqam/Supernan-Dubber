@@ -1,0 +1,27 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.DS_Store
+
+# Virtual environments
+venv/
+.env/
+.env.*
+
+# Video & Audio files
+*.mp4
+*.wav
+*.mp3
+*.m4a
+*.mov
+
+# Generated outputs
+transcript.txt
+*.log
+
+# Model cache (HuggingFace / Whisper)
+.cache/
+~/.cache/
+hf_cache/
