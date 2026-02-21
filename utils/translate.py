@@ -1,28 +1,27 @@
-from transformers import AutoTokenizer, AutoModelForSeq2SeqLM
+from transformers import MBartForConditionalGeneration, MBart50TokenizerFast
 import torch
 
-MODEL_NAME = "facebook/nllb-200-distilled-600M"
+MODEL_NAME = "facebook/mbart-large-50-many-to-many-mmt"
 
-tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME)
-model = AutoModelForSeq2SeqLM.from_pretrained(MODEL_NAME)
+tokenizer = MBart50TokenizerFast.from_pretrained(MODEL_NAME)
+model = MBartForConditionalGeneration.from_pretrained(MODEL_NAME)
+
+device = "cuda" if torch.cuda.is_available() else "cpu"
+model.to(device)
 
 def translate_kn_to_hi(text):
-    inputs = tokenizer(
-        text,
-        return_tensors="pt",
-        truncation=True,
-        src_lang="kan_Knda"
+    tokenizer.src_lang = "kn_IN"
+
+    encoded = tokenizer(text, return_tensors="pt").to(device)
+
+    generated_tokens = model.generate(
+        **encoded,
+        forced_bos_token_id=tokenizer.lang_code_to_id["hi_IN"],
+        max_length=512
     )
 
-    with torch.no_grad():
-        outputs = model.generate(
-            **inputs,
-            forced_bos_token_id=tokenizer.lang_code_to_id["hin_Deva"]
-        )
-
-    translated_text = tokenizer.decode(
-        outputs[0],
-        skip_special_tokens=True
-    )
+    translated_text = tokenizer.batch_decode(
+        generated_tokens, skip_special_tokens=True
+    )[0]
 
     return translated_text
