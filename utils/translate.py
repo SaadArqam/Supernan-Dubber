@@ -1,27 +1,39 @@
-from transformers import MBartForConditionalGeneration, MBart50TokenizerFast
+from transformers import AutoTokenizer, AutoModelForSeq2SeqLM
 import torch
 
-MODEL_NAME = "facebook/mbart-large-50-many-to-many-mmt"
+model_name = "facebook/nllb-200-distilled-600M"
 
-tokenizer = MBart50TokenizerFast.from_pretrained(MODEL_NAME)
-model = MBartForConditionalGeneration.from_pretrained(MODEL_NAME)
+tokenizer = AutoTokenizer.from_pretrained(model_name)
+model = AutoModelForSeq2SeqLM.from_pretrained(model_name)
 
-device = "cuda" if torch.cuda.is_available() else "cpu"
-model.to(device)
+def translate_to_hindi(text, detected_lang_code):
+    print(f"Translating from {detected_lang_code} → Hindi...")
 
-def translate_kn_to_hi(text):
-    tokenizer.src_lang = "kn_IN"
+    # Map whisper language code to NLLB language code
+    lang_map = {
+        "en": "eng_Latn",
+        "kn": "kan_Knda",
+        "hi": "hin_Deva",
+        "ta": "tam_Taml",
+        "te": "tel_Telu",
+        "ml": "mal_Mlym",
+        "fr": "fra_Latn",
+        "de": "deu_Latn",
+        "es": "spa_Latn"
+    }
 
-    encoded = tokenizer(text, return_tensors="pt").to(device)
+    src_lang = lang_map.get(detected_lang_code, "eng_Latn")
+
+    tokenizer.src_lang = src_lang
+
+    encoded = tokenizer(text, return_tensors="pt")
 
     generated_tokens = model.generate(
         **encoded,
-        forced_bos_token_id=tokenizer.lang_code_to_id["hi_IN"],
+        forced_bos_token_id=tokenizer.lang_code_to_id["hin_Deva"],
         max_length=512
     )
 
-    translated_text = tokenizer.batch_decode(
-        generated_tokens, skip_special_tokens=True
-    )[0]
+    result = tokenizer.batch_decode(generated_tokens, skip_special_tokens=True)
 
-    return translated_text 
+    return result[0]

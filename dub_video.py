@@ -1,14 +1,13 @@
 from utils.extract import extract_clip, extract_audio, merge_audio
 from utils.transcribe import transcribe_audio
-from utils.translate import translate_kn_to_hi
+from utils.translate import translate_to_hindi
 from utils.tts import generate_hindi_audio
 
-# INPUT_VIDEO = "input.mp4"
 INPUT_VIDEO = "/content/drive/MyDrive/Supernan-Dubber/input.mp4"
 
 CLIP_VIDEO = "clip.mp4"
 CLIP_AUDIO = "clip.wav"
-HINDI_AUDIO = "hindi.wav"
+HINDI_AUDIO = "hindi.mp3"
 DUBBED_VIDEO = "dubbed_output.mp4"
 
 
@@ -20,7 +19,7 @@ def main():
     extract_audio(CLIP_VIDEO, CLIP_AUDIO)
 
     print("Transcribing audio...")
-    transcript = transcribe_audio(CLIP_AUDIO)
+    transcript, detected_lang = transcribe_audio(CLIP_AUDIO)
 
     print("\n--- TRANSCRIPT ---")
     print(transcript)
@@ -31,7 +30,7 @@ def main():
     print("Transcript saved.")
 
     print("Translating to Hindi...")
-    hindi_text = translate_kn_to_hi(transcript)
+    hindi_text = translate_to_hindi(transcript, detected_lang)
 
     print("\n--- HINDI TRANSLATION ---")
     print(hindi_text)
