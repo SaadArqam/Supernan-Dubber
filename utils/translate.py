@@ -1,52 +1,71 @@
 import torch
 from transformers import AutoModelForSeq2SeqLM, AutoTokenizer
-import logging
+from transformers import pipeline
 
-logging.getLogger("transformers").setLevel(logging.ERROR)
+class IndicTranslator:
+    def __init__(self, model_name="ai4bharat/indictrans2-en-indic-1B", device=None):
+        """
+        Loads IndicTrans2 for high-fidelity, context-aware translation.
+        IndicTrans2 natively understands Indian context far better than NLLB or mBART.
+        """
+        self.device = device if device else ("cuda" if torch.cuda.is_available() else "cpu")
+        print(f"Loading IndicTrans2 ({model_name}) on {self.device}...")
+        
+        self.tokenizer = AutoTokenizer.from_pretrained(model_name, trust_remote_code=True)
+        self.model = AutoModelForSeq2SeqLM.from_pretrained(
+            model_name, 
+            trust_remote_code=True
+        ).to(self.device)
 
-model_name = "facebook/nllb-200-1.3B"
-print(f"Loading translation model {model_name}...")
-device = "cuda" if torch.cuda.is_available() else "cpu"
-tokenizer = AutoTokenizer.from_pretrained(model_name)
-model = AutoModelForSeq2SeqLM.from_pretrained(model_name).to(device)
-target_lang_nllb = "hin_Deva"
+        # IndicTrans2 uses specific language tags
+        self.target_lang_tag = "hin_Deva"
 
-WHISPER_TO_NLLB = {
-    "en": "eng_Latn", "kn": "kan_Knda", "ta": "tam_Taml", "te": "tel_Telu",
-    "ml": "mal_Mlym", "mr": "mar_Deva", "gu": "guj_Gujr", "pa": "pan_Guru",
-    "bn": "ben_Beng", "ur": "urd_Arab", "or": "ory_Orya", "as": "asm_Beng",
-    "fr": "fra_Latn", "de": "deu_Latn", "es": "spa_Latn", "it": "ita_Latn",
-    "pt": "por_Latn", "ru": "rus_Cyrl", "zh": "zho_Hans", "ja": "jpn_Jpan",
-    "ko": "kor_Hang", "ar": "arb_Arab", "tr": "tur_Latn", "hi": "hin_Deva",
-}
+    def translate_to_hindi(self, text: str, source_lang: str = "eng_Latn") -> str:
+        """
+        Translates text to Hindi using IndicTrans2.
+        For best results, Whisper should output English, then we route to Hindi.
+        """
+        if not text or not text.strip():
+            return ""
 
-def translate_to_hindi(text, detected_lang):
-    print(f"Translating from {detected_lang} → Hindi...")
-    if not text or not text.strip():
-        return ""
+        # IndicTrans2 formatting requires src and tgt tags attached to the input
+        batch = self.tokenizer(
+            text, 
+            src_lang=source_lang, 
+            tgt_lang=self.target_lang_tag, 
+            return_tensors="pt"
+        ).to(self.device)
 
-    source_lang_nllb = WHISPER_TO_NLLB.get(detected_lang.lower(), "eng_Latn")
-    tokenizer.src_lang = source_lang_nllb
+        with torch.no_grad():
+            generated_tokens = self.model.generate(
+                **batch,
+                use_cache=True,
+                max_length=256,
+                num_beams=5,
+                early_stopping=True
+            )
 
-    inputs = tokenizer(
-        text, 
-        return_tensors="pt", 
-        padding=True, 
-        truncation=True, 
-        max_length=512
-    ).to(device)
+        translated_text = self.tokenizer.batch_decode(
+            generated_tokens, 
+            skip_special_tokens=True, 
+            src_lang=source_lang,
+            tgt_lang=self.target_lang_tag
+        )[0]
+        
+        return translated_text
 
-    with torch.no_grad():
-        translated_tokens = model.generate(
-            **inputs,
-            forced_bos_token_id=tokenizer.convert_tokens_to_ids(target_lang_nllb),
-            max_length=512,
-            num_beams=5,
-            early_stopping=True,
-            no_repeat_ngram_size=3,
-            temperature=0.7,
-            do_sample=False
-        )
+# Provide a backward-compatible functional wrapper for dub_video.py
+_translator_instance = None
 
-    result = tokenizer.decode(translated_tokens[0], skip_special_tokens=True)
-    return result
+def translate_to_hindi(text: str, detected_lang: str) -> str:
+    global _translator_instance
+    if _translator_instance is None:
+        _translator_instance = IndicTranslator()
+    
+    # We map whatever whisper outputs, assuming English input for this model
+    # For a full multilingual pipeline: you would load indictrans2-indic-indic for kn->hi
+    # But for standard 15s clips, English transcription -> Hindi is the most accurate flow
+    source_tag = "eng_Latn" 
+    
+    print(f"Translating via IndicTrans2 → Hindi...")
+    return _translator_instance.translate_to_hindi(text, source_lang=source_tag)
