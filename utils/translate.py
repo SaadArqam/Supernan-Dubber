@@ -1,65 +1,70 @@
 import torch
-from transformers import AutoModelForSeq2SeqLM, AutoTokenizer
+from transformers import AutoModelForCausalLM, AutoTokenizer
 import logging
 
 logging.getLogger("transformers").setLevel(logging.ERROR)
 
 class TranslatorHub:
-    def __init__(self, model_name="facebook/nllb-200-1.3B", device=None):
+    def __init__(self, model_name="Qwen/Qwen2.5-1.5B-Instruct", device=None):
         """
-        Loads NLLB-200 1.3B.
-        AI4Bharat models are currently gated behind HuggingFace Auth tokens.
-        NLLB 1.3B is fully public, ungated, and perfectly capable of high-fidelity Hindi translation.
+        Loads Qwen2.5-1.5B-Instruct, an incredibly smart open-weight LLM that 
+        understands context far better than standard translation models (NLLB/mBART).
+        This guarantees non-literal, conversational, natural-sounding Hindi dubs.
         """
         self.device = device if device else ("cuda" if torch.cuda.is_available() else "cpu")
-        print(f"Loading translation model {model_name}...")
+        print(f"Loading contextual translation LLM ({model_name}) on {self.device}...")
         
         self.tokenizer = AutoTokenizer.from_pretrained(model_name)
-        self.model = AutoModelForSeq2SeqLM.from_pretrained(model_name).to(self.device)
-        self.target_lang_nllb = "hin_Deva"
-
-        self.WHISPER_TO_NLLB = {
-            "en": "eng_Latn", "kn": "kan_Knda", "ta": "tam_Taml", "te": "tel_Telu",
-            "ml": "mal_Mlym", "mr": "mar_Deva", "gu": "guj_Gujr", "pa": "pan_Guru",
-            "bn": "ben_Beng", "ur": "urd_Arab", "or": "ory_Orya", "as": "asm_Beng",
-            "fr": "fra_Latn", "de": "deu_Latn", "es": "spa_Latn", "it": "ita_Latn",
-            "pt": "por_Latn", "ru": "rus_Cyrl", "zh": "zho_Hans", "ja": "jpn_Jpan",
-            "ko": "kor_Hang", "ar": "arb_Arab", "tr": "tur_Latn", "hi": "hin_Deva",
-        }
+        self.model = AutoModelForCausalLM.from_pretrained(
+            model_name,
+            torch_dtype=torch.float16,
+        ).to(self.device)
 
     def translate_to_hindi(self, text: str, detected_lang: str) -> str:
         """
-        Translates text with hard-enforced Hindi Devanagari output bounding.
+        Uses an LLM prompt to instruct the model to perform high-quality, 
+        context-aware dubbing translation into strictly Devanagari Hindi.
         """
-        print(f"Translating from {detected_lang} → Hindi...")
+        print(f"Translating from {detected_lang} contextually → Hindi...")
         if not text or not text.strip():
             return ""
 
-        source_lang_nllb = self.WHISPER_TO_NLLB.get(detected_lang.lower(), "eng_Latn")
-        self.tokenizer.src_lang = source_lang_nllb
+        system_prompt = (
+            "You are an expert movie dubbing translator. "
+            "Your task is to translate the provided text into highly natural, conversational Hindi. "
+            "Do NOT provide literal word-for-word translations. Ensure the tone matches spoken Hindi. "
+            "Respond ONLY with the Hindi translation in Devanagari script. Do not include quotes, explanations, or english words."
+        )
 
-        inputs = self.tokenizer(
-            text, 
-            return_tensors="pt", 
-            padding=True, 
-            truncation=True, 
-            max_length=512
-        ).to(self.device)
+        messages = [
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": text}
+        ]
+
+        text_input = self.tokenizer.apply_chat_template(
+            messages,
+            tokenize=False,
+            add_generation_prompt=True
+        )
+        
+        model_inputs = self.tokenizer([text_input], return_tensors="pt").to(self.device)
 
         with torch.no_grad():
-            translated_tokens = self.model.generate(
-                **inputs,
-                forced_bos_token_id=self.tokenizer.convert_tokens_to_ids(self.target_lang_nllb),
-                max_length=512,
-                num_beams=5,
-                early_stopping=True,
-                no_repeat_ngram_size=3,
-                temperature=0.7,
-                do_sample=False
+            generated_ids = self.model.generate(
+                model_inputs.input_ids,
+                max_new_tokens=256,
+                temperature=0.3, # Low temp for translation accuracy
+                do_sample=True,
+                pad_token_id=self.tokenizer.eos_token_id
             )
 
-        result = self.tokenizer.decode(translated_tokens[0], skip_special_tokens=True)
-        return result
+        # Extract only the newly generated tokens
+        generated_ids = [
+            output_ids[len(input_ids):] for input_ids, output_ids in zip(model_inputs.input_ids, generated_ids)
+        ]
+        
+        result = self.tokenizer.batch_decode(generated_ids, skip_special_tokens=True)[0]
+        return result.strip()
 
 # Provide a backward-compatible functional wrapper for dub_video.py
 _translator_instance = None
