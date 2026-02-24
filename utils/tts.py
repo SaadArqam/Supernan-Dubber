@@ -16,6 +16,10 @@ class XTTSVoiceCloner:
                 "!pip install coqui-tts"
             )
             
+        # Programmatically agree to the Coqui TTS terms of service 
+        # By doing this, we bypass the interactive prompt in Colab which hangs execution
+        os.environ["COQUI_TOS_AGREED"] = "1"
+        
         self.device = device if device else ("cuda" if torch.cuda.is_available() else "cpu")
         print(f"Loading XTTS Voice Cloner ({model_name}) on {self.device}...")
         
