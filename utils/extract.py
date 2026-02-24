@@ -57,6 +57,37 @@ def separate_vocals(input_audio, vocals_out="vocals.wav", bgm_out="no_vocals.wav
     shutil.copy(generated_bgm, bgm_out)
     print(f"Vocals isolated to {vocals_out}. Background music saved to {bgm_out}.")
 
+def get_audio_duration(audio_path):
+    import soundfile as sf
+    f = sf.SoundFile(audio_path)
+    return f.frames / f.samplerate
+
+def match_audio_duration(input_audio, target_duration, output_audio):
+    """
+    Speeds up or slows down the generated Hindi audio to perfectly match 
+    the original 15-second video boundary using ffmpeg's atempo filter.
+    """
+    current_duration = get_audio_duration(input_audio)
+    if current_duration <= 0:
+        shutil.copy(input_audio, output_audio)
+        return
+
+    # Ratio > 1 means the audio is too long and needs to speed up.
+    # e.g., 26s generated audio / 15s target = ~1.73x speed.
+    ratio = current_duration / target_duration
+    print(f"Time-Stretching: Adjusting XTTS audio from {current_duration:.2f}s to {target_duration:.2f}s (Speed: {ratio:.2f}x)")
+
+    # ffmpeg's atempo handles ratios from 0.5 to 100.0 natively.
+    cmd = [
+        "ffmpeg",
+        "-y",
+        "-i", input_audio,
+        "-filter:a", f"atempo={ratio}",
+        output_audio
+    ]
+    subprocess.run(cmd, check=True)
+
+
 def mix_audio(vocals_path, bgm_path, output_path):
     """
     Mixes the generated Hindi vocals back with the original background music
@@ -68,7 +99,7 @@ def mix_audio(vocals_path, bgm_path, output_path):
         "-y",
         "-i", vocals_path,
         "-i", bgm_path,
-        "-filter_complex", "amix=inputs=2:duration=longest",
+        "-filter_complex", "amix=inputs=2:duration=shortest",
         output_path
     ]
     subprocess.run(cmd, check=True)

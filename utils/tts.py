@@ -83,9 +83,17 @@ class XTTSVoiceCloner:
             # Cleanup temp file
             os.remove(temp_out)
 
-        # Stitch all audio chunks together seamlessly
+        # Stitch all audio chunks together seamlessly with 150ms silence between them to prevent pop/click cracking
         if all_wavs:
-            final_audio = np.concatenate(all_wavs)
+            silence_padding = np.zeros(int(sample_rate * 0.15), dtype=np.float32)
+            
+            final_wavs_with_silence = []
+            for i, wav in enumerate(all_wavs):
+                final_wavs_with_silence.append(wav)
+                if i < len(all_wavs) - 1:
+                    final_wavs_with_silence.append(silence_padding)
+                    
+            final_audio = np.concatenate(final_wavs_with_silence)
             sf.write(output_path, final_audio, sample_rate)
             print(f"Voice cloned audio stitched and saved safely to {output_path}")
         else:

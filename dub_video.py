@@ -1,5 +1,5 @@
 import os
-from utils.extract import extract_clip, extract_audio, separate_vocals, mix_audio, merge_audio_to_video
+from utils.extract import extract_clip, extract_audio, separate_vocals, mix_audio, merge_audio_to_video, match_audio_duration
 from utils.transcribe import transcribe_audio
 from utils.translate import translate_to_hindi
 from utils.tts import generate_hindi_audio
@@ -21,6 +21,7 @@ VOCALS_WAV = "vocals.wav"
 BGM_WAV = "no_vocals.wav"
 
 HINDI_VOCALS = "hindi_vocals.wav"
+HINDI_VOCALS_STRETCHED = "hindi_vocals_stretched.wav"
 FINAL_MIXED_AUDIO = "final_hindi_mixed.wav"
 DUBBED_VIDEO = "dubbed_output.mp4"
 
@@ -62,17 +63,22 @@ def process_15s_segment():
 
 
     print("\n--- PHASE 4: ZERO-SHOT VOICE CLONING (XTTS) ---")
-    # Clones voice strictly using the isolated `vocals.wav` (crystal-clear audio clone)
-    generate_hindi_audio(hindi_text, HINDI_VOCALS, reference_audio_path=VOCALS_WAV)
+    # Clone voice using the original noisy audio (Demucs vocals often have
+    # robotic isolation artifacts which XTTS accidentally mimics as noise)
+    generate_hindi_audio(hindi_text, HINDI_VOCALS, reference_audio_path=CLIP_AUDIO)
+
+    print("\n--- PHASE 4.5: TIME-STRETCHING AUDIO TO FIT 15 SECONDS ---")
+    # Shrink or stretch the Hindi speech to fit perfectly inside the 15s window
+    match_audio_duration(HINDI_VOCALS, target_duration=15.0, output_audio=HINDI_VOCALS_STRETCHED)
 
     print("\n--- PHASE 5: CINEMATIC MIXING ---")
-    # Mix the generated Hindi voice clone back into the original Background Music
+    # Mix the stretched Hindi voice clone back into the original Background Music
     if os.path.exists(BGM_WAV):
-        mix_audio(HINDI_VOCALS, BGM_WAV, FINAL_MIXED_AUDIO)
+        mix_audio(HINDI_VOCALS_STRETCHED, BGM_WAV, FINAL_MIXED_AUDIO)
     else:
         # Fallback if bgm extraction failed
         import shutil
-        shutil.copy(HINDI_VOCALS, FINAL_MIXED_AUDIO)
+        shutil.copy(HINDI_VOCALS_STRETCHED, FINAL_MIXED_AUDIO)
 
 
     print("\n--- PHASE 6: HIGH-FIDELITY LIP-SYNCING ---")
