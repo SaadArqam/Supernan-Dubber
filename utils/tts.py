@@ -36,6 +36,11 @@ class XTTSVoiceCloner:
             
         print(f"Cloning voice from {reference_audio_path}...")
         
+        if not text or not text.strip():
+            print("Warning: Received empty text for TTS. Falling back to default audio safety phrase.")
+            text = "ಮುಖ್ಯವಾದ ಆಡಿಯೋ ಮಾಹಿತಿಯನ್ನು ಗ್ರಹಿಸಲು ಸಾಧ್ಯವಾಗಲಿಲ್ಲ." # Some generic default in native language or hindi fallback
+            text = "क्षमा करें, मैं इस ऑडियो को नहीं समझ पाया।" # Hindi: Sorry, I couldn't understand this audio.
+
         # Generate speech with voice cloning
         self.tts.tts_to_file(
             text=text,
