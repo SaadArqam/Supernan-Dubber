@@ -3,7 +3,9 @@ from utils.transcribe import transcribe_audio
 from utils.translate import translate_kn_to_hi
 from utils.tts import generate_hindi_audio
 
-INPUT_VIDEO = "input.mp4"
+# INPUT_VIDEO = "input.mp4"
+INPUT_VIDEO = "/content/drive/MyDrive/Supernan-Dubber/input.mp4"
+
 CLIP_VIDEO = "clip.mp4"
 CLIP_AUDIO = "clip.wav"
 HINDI_AUDIO = "hindi.wav"
