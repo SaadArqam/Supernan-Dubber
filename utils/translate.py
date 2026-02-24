@@ -39,7 +39,7 @@ def translate_to_hindi(text, detected_lang):
     with torch.no_grad():
         translated_tokens = model.generate(
             **inputs,
-            forced_bos_token_id=tokenizer.lang_code_to_id[target_lang_nllb],
+            forced_bos_token_id=tokenizer.convert_tokens_to_ids(target_lang_nllb),
             max_length=512,
             num_beams=5,
             early_stopping=True,
