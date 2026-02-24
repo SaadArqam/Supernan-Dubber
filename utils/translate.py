@@ -3,7 +3,7 @@ from transformers import AutoModelForSeq2SeqLM, AutoTokenizer
 from transformers import pipeline
 
 class IndicTranslator:
-    def __init__(self, model_name="ai4bharat/indictrans2-en-indic-1B", device=None):
+    def __init__(self, model_name="ai4bharat/indictrans2-en-indic-dist-200M", device=None):
         """
         Loads IndicTrans2 for high-fidelity, context-aware translation.
         IndicTrans2 natively understands Indian context far better than NLLB or mBART.
