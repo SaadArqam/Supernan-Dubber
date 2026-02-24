@@ -31,14 +31,16 @@ class TranslatorHub:
 
         system_prompt = (
             "You are an expert movie dubbing translator. "
-            "Your task is to translate the provided text into highly natural, conversational Hindi. "
-            "Do NOT provide literal word-for-word translations. Ensure the tone matches spoken Hindi. "
-            "Respond ONLY with the Hindi translation in Devanagari script. Do not include quotes, explanations, or english words."
+            "Your task is to translate the provided English text into highly natural, conversational Hindi. "
+            "CRITICAL REQUIREMENT: Hindi translations are usually longer than English, which causes lip-sync issues. "
+            "You MUST keep the Hindi translation extremely concise so it matches the exact syllable count and duration of the original English text. "
+            "Use shorter synonymous words and punchy dialogue. NEVER output a literal translation if it's too long. "
+            "Respond ONLY with the Hindi translation in Devanagari script. Do not include quotes, english words, or explanations."
         )
 
         messages = [
             {"role": "system", "content": system_prompt},
-            {"role": "user", "content": text}
+            {"role": "user", "content": f"Translate this concisely to match audio timing: {text}"}
         ]
 
         text_input = self.tokenizer.apply_chat_template(

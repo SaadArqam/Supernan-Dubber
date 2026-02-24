@@ -63,9 +63,13 @@ def process_15s_segment():
 
 
     print("\n--- PHASE 4: ZERO-SHOT VOICE CLONING (XTTS) ---")
-    # Clone voice using the original noisy audio (Demucs vocals often have
-    # robotic isolation artifacts which XTTS accidentally mimics as noise)
-    generate_hindi_audio(hindi_text, HINDI_VOCALS, reference_audio_path=CLIP_AUDIO)
+    # Clone voice using a strict 5-6 second sample of pristine isolated vocals.
+    # Passing the full 15s CLIP_AUDIO overloads XTTS and causes horrible noisy/robotic artifacts.
+    CLONE_REF = "clone_ref.wav"
+    import subprocess
+    subprocess.run(["ffmpeg", "-y", "-i", VOCALS_WAV, "-t", "6", "-loglevel", "error", CLONE_REF])
+    
+    generate_hindi_audio(hindi_text, HINDI_VOCALS, reference_audio_path=CLONE_REF)
 
     print("\n--- PHASE 4.5: TIME-STRETCHING AUDIO TO FIT 15 SECONDS ---")
     # Shrink or stretch the Hindi speech to fit perfectly inside the 15s window

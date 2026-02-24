@@ -75,7 +75,15 @@ def match_audio_duration(input_audio, target_duration, output_audio):
     # Ratio > 1 means the audio is too long and needs to speed up.
     # e.g., 26s generated audio / 15s target = ~1.73x speed.
     ratio = current_duration / target_duration
-    print(f"Time-Stretching: Adjusting XTTS audio from {current_duration:.2f}s to {target_duration:.2f}s (Speed: {ratio:.2f}x)")
+    
+    # Cap the maximum speed deviation to +/- 25% so the speaker doesn't sound absurdly fast/slow
+    if ratio > 1.25:
+        print(f"Warning: Hindi audio is much longer than 15s. Squeezing at max 1.25x speed and truncating the rest to preserve natural voice.")
+        ratio = 1.25
+    elif ratio < 0.80:
+        ratio = 0.80
+        
+    print(f"Time-Stretching: Adjusting XTTS audio from {current_duration:.2f}s to Target via (Speed: {ratio:.2f}x)")
 
     # ffmpeg's atempo handles ratios from 0.5 to 100.0 natively.
     cmd = [
