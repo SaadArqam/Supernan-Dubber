@@ -1,43 +1,38 @@
-import torch
-import scipy.io.wavfile as wavfile
-from transformers import VitsModel, AutoTokenizer
+import subprocess
 
-class HindiTTS:
-    def __init__(self, model_name="facebook/mms-tts-hin", device=None):
+class HindiFemaleTTS:
+    def __init__(self, voice_name="hi-IN-SwaraNeural"):
         """
-        Uses standard MMS-Hindi (Massively Multilingual Speech) developed by Meta.
-        It runs purely on HuggingFace Transformers logic, eliminating the extremely
-        volatile 'coqui-tts' dependency conflicts (numpy/librosa version issues).
+        Uses Microsoft's Azure Edge-TTS engine for highly natural Hindi voices.
+        Unlike local HuggingFace TTS models (MMS, Bark, XTTS) which either default
+        to male voices, hallucinate, or cause extreme pip dependency conflicts in Colab,
+        Edge-TTS provides a flawless, production-grade female neural voice instantly
+        with zero dependencies required other than `edge-tts`.
         """
-        self.device = device if device else ("cuda" if torch.cuda.is_available() else "cpu")
-        print(f"Loading TTS Model: {model_name} on {self.device}...")
-        
-        self.tokenizer = AutoTokenizer.from_pretrained(model_name)
-        self.model = VitsModel.from_pretrained(model_name).to(self.device)
+        self.voice_name = voice_name
+        print(f"Initializing Edge-TTS Engine with female voice: {self.voice_name}...")
 
     def generate_audio(self, text: str, output_path="hindi.wav"):
         if not text or not text.strip():
             text = "क्षमा करें, कोई आवाज़ नहीं मिली।"
             
-        print("Generating Hindi speech waveform...")
+        print("Generating natural female Hindi speech...")
         
-        # Tokenize the Devanagari Hindi text
-        inputs = self.tokenizer(text, return_tensors="pt").to(self.device)
+        # Edge-TTS runs purely via subprocess to avoid any asyncio loop conflicts in Jupyter/Colab
+        cmd = [
+            "edge-tts",
+            "--voice", self.voice_name,
+            "--text", text,
+            "--write-media", output_path
+        ]
         
-        # Generate raw waveform
-        with torch.no_grad():
-            output = self.model(**inputs).waveform
-            
-        audio_data = output.cpu().numpy().squeeze()
-        
-        # Save securely using scipy
-        wavfile.write(output_path, self.model.config.sampling_rate, audio_data)
-        print(f"✅ TTS output saved successfully to {output_path}")
+        subprocess.run(cmd, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        print(f"✅ Female TTS output saved successfully to {output_path}")
 
 # Singleton wrapper
 _tts_idx = None
 def generate_hindi_audio(text: str, output_path: str):
     global _tts_idx
     if _tts_idx is None:
-        _tts_idx = HindiTTS()
+        _tts_idx = HindiFemaleTTS()
     _tts_idx.generate_audio(text, output_path)
