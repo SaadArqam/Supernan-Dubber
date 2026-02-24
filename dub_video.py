@@ -1,6 +1,7 @@
 import os
 from utils.extract import extract_clip, extract_audio, merge_audio
 from utils.transcribe import transcribe_audio
+from utils.analyze import detect_gender
 from utils.translate import translate_to_hindi
 from utils.tts import generate_hindi_audio
 
@@ -9,8 +10,7 @@ def run_dubbing_pipeline():
     print("🎬 STARTING PRODUCTION-GRADE DUBBING PIPELINE 🎬")
     print("="*60)
 
-    # INPUT_VIDEO = "input.mp4"
-    INPUT_VIDEO = "/content/drive/MyDrive/Supernan-Dubber/input.mp4"
+    INPUT_VIDEO = "input.mp4"
     CLIP_VIDEO = "clip.mp4"
     CLIP_AUDIO = "clip.wav"
     HINDI_AUDIO = "hindi.wav"
@@ -25,6 +25,9 @@ def run_dubbing_pipeline():
     extract_clip(INPUT_VIDEO, CLIP_VIDEO, start_time="00:00:15", duration="15")
     extract_audio(CLIP_VIDEO, CLIP_AUDIO)
 
+    print("\n[PHASE 1.5] Speaker Analysis (Gender Detection)")
+    speaker_gender = detect_gender(CLIP_AUDIO)
+
     print("\n[PHASE 2] High-Accuracy Transcription (Whisper large-v3-turbo)")
     transcript, detected_lang = transcribe_audio(CLIP_AUDIO)
     print(f"Transcript ({detected_lang}): {transcript}")
@@ -33,8 +36,8 @@ def run_dubbing_pipeline():
     hindi_text = translate_to_hindi(transcript, detected_lang)
     print(f"Hindi: {hindi_text}")
 
-    print("\n[PHASE 4] Text-to-Speech Generation (MMS-Hindi VITS)")
-    generate_hindi_audio(hindi_text, HINDI_AUDIO)
+    print("\n[PHASE 4] Text-to-Speech Generation (Edge-TTS)")
+    generate_hindi_audio(hindi_text, HINDI_AUDIO, gender=speaker_gender)
 
     print("\n[PHASE 5] Video & Audio Merging")
     merge_audio(CLIP_VIDEO, HINDI_AUDIO, OUTPUT_VIDEO)

@@ -1,38 +1,44 @@
 import subprocess
+import sys
 
-class HindiFemaleTTS:
-    def __init__(self, voice_name="hi-IN-SwaraNeural"):
+class EdgeTTS:
+    def __init__(self, gender="female"):
         """
-        Uses Microsoft's Azure Edge-TTS engine for highly natural Hindi voices.
-        Unlike local HuggingFace TTS models (MMS, Bark, XTTS) which either default
-        to male voices, hallucinate, or cause extreme pip dependency conflicts in Colab,
-        Edge-TTS provides a flawless, production-grade female neural voice instantly
-        with zero dependencies required other than `edge-tts`.
+        Loads Microsoft's Azure Edge-TTS engine and assigns the voice according to the detected gender.
         """
-        self.voice_name = voice_name
-        print(f"Initializing Edge-TTS Engine with female voice: {self.voice_name}...")
+        # Assign best available neural voices mapped to gender
+        if gender.lower() == "female":
+            self.voice_name = "hi-IN-SwaraNeural"
+        else:
+            self.voice_name = "hi-IN-MadhurNeural"
+            
+        print(f"Initializing Edge-TTS Engine with {gender} voice: {self.voice_name}...")
 
     def generate_audio(self, text: str, output_path="hindi.wav"):
         if not text or not text.strip():
             text = "क्षमा करें, कोई आवाज़ नहीं मिली।"
             
-        print("Generating natural female Hindi speech...")
+        print(f"Generating natural {self.voice_name} speech...")
         
-        # Edge-TTS runs purely via subprocess to avoid any asyncio loop conflicts in Jupyter/Colab
+        # Edge-TTS runs purely via subprocess to avoid any asyncio loop conflicts in Jupyter/Colab.
+        # Calling 'python -m edge_tts' completely bypasses the Colab/Jupyter FileNotFoundError 
+        # that happens when the CLI executable gets lost in the linux PATH.
         cmd = [
-            "edge-tts",
+            sys.executable, "-m", "edge_tts",
             "--voice", self.voice_name,
             "--text", text,
             "--write-media", output_path
         ]
         
         subprocess.run(cmd, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-        print(f"✅ Female TTS output saved successfully to {output_path}")
+        print(f"✅ TTS output saved successfully to {output_path}")
 
-# Singleton wrapper
-_tts_idx = None
-def generate_hindi_audio(text: str, output_path: str):
-    global _tts_idx
-    if _tts_idx is None:
-        _tts_idx = HindiFemaleTTS()
-    _tts_idx.generate_audio(text, output_path)
+# Singleton dictionary wrapper to maintain instances
+_tts_instances = {}
+
+def generate_hindi_audio(text: str, output_path: str, gender: str = "female"):
+    global _tts_instances
+    if gender not in _tts_instances:
+        _tts_instances[gender] = EdgeTTS(gender=gender)
+        
+    _tts_instances[gender].generate_audio(text, output_path)
