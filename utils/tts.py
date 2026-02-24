@@ -1,5 +1,7 @@
-from TTS.api import TTS
+from gtts import gTTS
 
 def generate_hindi_audio(text, output_path):
-    tts = TTS(model_name="tts_models/multilingual/multi-dataset/xtts_v2")
-    tts.tts_to_file(text=text, file_path=output_path)
+    print("Generating Hindi audio with gTTS...")
+    tts = gTTS(text=text, lang="hi")
+    tts.save(output_path)
+    print("Hindi audio saved.")
