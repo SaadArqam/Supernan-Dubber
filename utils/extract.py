@@ -29,3 +29,16 @@ def extract_audio(input_video, output_audio):
         output_audio
     ]
     subprocess.run(cmd, check=True)
+
+def merge_audio(video_path, new_audio_path, output_path):
+    cmd = [
+        "ffmpeg",
+        "-y",
+        "-i", video_path,
+        "-i", new_audio_path,
+        "-c:v", "copy",
+        "-map", "0:v:0",
+        "-map", "1:a:0",
+        output_path
+    ]
+    subprocess.run(cmd, check=True)

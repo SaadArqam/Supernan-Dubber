@@ -24,4 +24,4 @@ def translate_kn_to_hi(text):
         generated_tokens, skip_special_tokens=True
     )[0]
 
-    return translated_text
+    return translated_text 
