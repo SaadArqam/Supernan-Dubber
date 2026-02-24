@@ -1,37 +1,34 @@
-from transformers import AutoTokenizer, AutoModelForSeq2SeqLM
-import torch
+from transformers import MBartForConditionalGeneration, MBart50TokenizerFast
 
-model_name = "facebook/nllb-200-distilled-600M"
+model_name = "facebook/mbart-large-50-many-to-many-mmt"
 
-tokenizer = AutoTokenizer.from_pretrained(model_name)
-model = AutoModelForSeq2SeqLM.from_pretrained(model_name)
+tokenizer = MBart50TokenizerFast.from_pretrained(model_name)
+model = MBartForConditionalGeneration.from_pretrained(model_name)
 
 lang_map = {
-    "en": "eng_Latn",
-    "kn": "kan_Knda",
-    "hi": "hin_Deva",
-    "ta": "tam_Taml",
-    "te": "tel_Telu",
-    "ml": "mal_Mlym",
-    "fr": "fra_Latn",
-    "de": "deu_Latn",
-    "es": "spa_Latn"
+    "en": "en_XX",
+    "kn": "kn_IN",
+    "hi": "hi_IN",
+    "ta": "ta_IN",
+    "te": "te_IN",
+    "ml": "ml_IN",
+    "fr": "fr_XX",
+    "de": "de_DE",
+    "es": "es_XX"
 }
 
 def translate_to_hindi(text, detected_lang):
     print(f"Translating from {detected_lang} → Hindi...")
 
-    src_lang = lang_map.get(detected_lang, "eng_Latn")
+    src_lang = lang_map.get(detected_lang, "en_XX")
 
     tokenizer.src_lang = src_lang
 
     encoded = tokenizer(text, return_tensors="pt")
 
-    hindi_token_id = tokenizer.convert_tokens_to_ids("hin_Deva")
-
     generated_tokens = model.generate(
         **encoded,
-        forced_bos_token_id=hindi_token_id,
+        forced_bos_token_id=tokenizer.lang_code_to_id["hi_IN"],
         max_length=512
     )
 
