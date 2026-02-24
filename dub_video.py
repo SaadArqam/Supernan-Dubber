@@ -9,7 +9,8 @@ def run_dubbing_pipeline():
     print("🎬 STARTING PRODUCTION-GRADE DUBBING PIPELINE 🎬")
     print("="*60)
 
-    INPUT_VIDEO = "input.mp4"
+    # INPUT_VIDEO = "input.mp4"
+    INPUT_VIDEO = "/content/drive/MyDrive/Supernan-Dubber/input.mp4"
     CLIP_VIDEO = "clip.mp4"
     CLIP_AUDIO = "clip.wav"
     HINDI_AUDIO = "hindi.wav"
