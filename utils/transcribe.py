@@ -2,23 +2,22 @@ from faster_whisper import WhisperModel
 
 def transcribe_audio(audio_path):
     """
-    Transcribes the clean, isolated vocals using faster-whisper's large-v3-turbo model.
-    By using the isolated vocals rather than raw noisy audio, transcription accuracy
-    approaches 100%, providing the flawless foundation required for high-quality dubs.
+    Transcribes the audio using faster-whisper.
+    Uses large-v3-turbo for incredibly fast but highly accurate transcription.
+    Automatically detects the spoken language.
     """
-    print("Loading Faster-Whisper (large-v3-turbo) for maximum accuracy on isolated vocals...")
-    # float16 requires GPU. large-v3-turbo performs incredibly well on 15s clips
+    print("Loading ASR Model: faster-whisper (large-v3-turbo)...")
+    
+    # We use large-v3-turbo because it bridges the speed of 'medium' with the accuracy of 'large'
     model = WhisperModel("large-v3-turbo", device="cuda", compute_type="float16")
     
-    # Transcribe the isolated voice
-    segments, info = model.transcribe(audio_path)
-
-    text = ""
-    for segment in segments:
-        text += segment.text + " "
-
-    detected_language = info.language
-
-    print(f"Detected language with high confidence: {detected_language}")
-
-    return text.strip(), detected_language
+    print("Transcribing and detecting language...")
+    segments, info = model.transcribe(audio_path, beam_size=5)
+    
+    # Join the generator segments into a single cohesive string
+    text = " ".join([segment.text for segment in segments])
+    detected_lang = info.language
+    
+    print(f"✅ Transcription complete. Detected Source Language: '{detected_lang}'")
+    
+    return text.strip(), detected_lang
