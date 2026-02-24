@@ -11,8 +11,9 @@ class XTTSVoiceCloner:
             from TTS.api import TTS
         except ImportError:
             raise ImportError(
-                "Coqui TTS is not installed. Please install it by running:\n"
-                "!pip install TTS"
+                "Coqui TTS is not installed or incompatible.\n"
+                "Google Colab now uses Python 3.12, so you must install the community fork:\n"
+                "!pip install coqui-tts"
             )
             
         self.device = device if device else ("cuda" if torch.cuda.is_available() else "cpu")
