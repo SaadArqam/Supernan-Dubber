@@ -1,6 +1,5 @@
 import os
 import torch
-from TTS.api import TTS
 
 class XTTSVoiceCloner:
     def __init__(self, model_name="tts_models/multilingual/multi-dataset/xtts_v2", device=None):
@@ -8,6 +7,14 @@ class XTTSVoiceCloner:
         Loads Coqui XTTS-v2 for zero-shot voice cloning.
         Requires agreeing to Coqui terms on first download in Colab.
         """
+        try:
+            from TTS.api import TTS
+        except ImportError:
+            raise ImportError(
+                "Coqui TTS is not installed. Please install it by running:\n"
+                "!pip install TTS"
+            )
+            
         self.device = device if device else ("cuda" if torch.cuda.is_available() else "cpu")
         print(f"Loading XTTS Voice Cloner ({model_name}) on {self.device}...")
         
