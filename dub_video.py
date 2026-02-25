@@ -10,18 +10,24 @@ def run_dubbing_pipeline():
     print("🎬 STARTING PRODUCTION-GRADE DUBBING PIPELINE 🎬")
     print("="*60)
 
-    # INPUT_VIDEO = "input.mp4"
-    INPUT_VIDEO = "/content/drive/MyDrive/Supernan-Dubber/input.mp4"
+    # Intelligent path detection:
+    # 1. First check if input.mp4 exists in the current Colab root directory
+    # 2. If not, fallback to the Google Drive folder
+    if os.path.exists("input.mp4"):
+        INPUT_VIDEO = "input.mp4"
+        print("📁 Found 'input.mp4' in root directory.")
+    elif os.path.exists("/content/drive/MyDrive/Supernan-Dubber/input.mp4"):
+        INPUT_VIDEO = "/content/drive/MyDrive/Supernan-Dubber/input.mp4"
+        print("📁 Found 'input.mp4' in Google Drive.")
+    else:
+        print(f"❌ Error: Source video not found in root or Google Drive!")
+        print("Please upload your video as 'input.mp4' in Google Colab or Google Drive.")
+        return
 
     CLIP_VIDEO = "clip.mp4"
     CLIP_AUDIO = "clip.wav"
     HINDI_AUDIO = "hindi.wav"
     OUTPUT_VIDEO = "dubbed_output.mp4"
-
-    if not os.path.exists(INPUT_VIDEO):
-        print(f"❌ Error: Source video '{INPUT_VIDEO}' not found!")
-        print("Please upload or rename your video to 'input.mp4' in Google Colab.")
-        return
 
     print("\n[PHASE 1] Video & Audio Extraction")
     extract_clip(INPUT_VIDEO, CLIP_VIDEO, start_time="00:00:15", duration="15")
