@@ -20,17 +20,27 @@ class EdgeTTS:
             
         print(f"Generating natural {self.voice_name} speech...")
         
-        # Edge-TTS runs purely via subprocess to avoid any asyncio loop conflicts in Jupyter/Colab.
-        # Calling 'python -m edge_tts' completely bypasses the Colab/Jupyter FileNotFoundError 
-        # that happens when the CLI executable gets lost in the linux PATH.
+        import shutil
+        edge_tts_path = shutil.which("edge-tts") or "edge-tts"
+        
+        # Write text to a temporary file to completely bypass shell character limits/quoting issues in Hindi
+        with open("tts_temp.txt", "w", encoding="utf-8") as f:
+            f.write(text)
+            
         cmd = [
-            sys.executable, "-m", "edge_tts",
+            edge_tts_path,
             "--voice", self.voice_name,
-            "--text", text,
+            "-f", "tts_temp.txt",
             "--write-media", output_path
         ]
         
-        subprocess.run(cmd, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        try:
+            subprocess.run(cmd, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE)
+        except subprocess.CalledProcessError as e:
+            error_msg = e.stderr.decode('utf-8') if e.stderr else "Unknown Error"
+            print(f"\n❌ Edge-TTS Error: {error_msg}")
+            raise RuntimeError(f"Edge-TTS failed to generate audio. Is it installed? (pip install edge-tts)")
+            
         print(f"✅ TTS output saved successfully to {output_path}")
 
 # Singleton dictionary wrapper to maintain instances
