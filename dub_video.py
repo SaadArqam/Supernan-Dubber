@@ -7,18 +7,18 @@ from utils.tts import generate_hindi_audio
 
 def run_dubbing_pipeline():
     print("\n" + "="*60)
-    print("🎬 STARTING PRODUCTION-GRADE DUBBING PIPELINE 🎬")
+    print("STARTING PRODUCTION-GRADE DUBBING PIPELINE")
     print("="*60)
 
 
     if os.path.exists("input.mp4"):
         INPUT_VIDEO = "input.mp4"
-        print("📁 Found 'input.mp4' in root directory.")
+        print("Found 'input.mp4' in root directory.")
     elif os.path.exists("/content/drive/MyDrive/Supernan-Dubber/input.mp4"):
         INPUT_VIDEO = "/content/drive/MyDrive/Supernan-Dubber/input.mp4"
-        print("📁 Found 'input.mp4' in Google Drive.")
+        print("Found 'input.mp4' in Google Drive.")
     else:
-        print(f"❌ Error: Source video not found in root or Google Drive!")
+        print(f"Error: Source video not found in root or Google Drive!")
         print("Please upload your video as 'input.mp4' in Google Colab or Google Drive.")
         return
 

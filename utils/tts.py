@@ -3,10 +3,6 @@ import sys
 
 class EdgeTTS:
     def __init__(self, gender="female"):
-        """
-        Loads Microsoft's Azure Edge-TTS engine and assigns the voice according to the detected gender.
-        """
-        # Assign best available neural voices mapped to gender
         if gender.lower() == "female":
             self.voice_name = "hi-IN-SwaraNeural"
         else:
@@ -23,7 +19,6 @@ class EdgeTTS:
         import shutil
         edge_tts_path = shutil.which("edge-tts") or "edge-tts"
         
-        # Write text to a temporary file to completely bypass shell character limits/quoting issues in Hindi
         with open("tts_temp.txt", "w", encoding="utf-8") as f:
             f.write(text)
             
@@ -38,12 +33,11 @@ class EdgeTTS:
             subprocess.run(cmd, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE)
         except subprocess.CalledProcessError as e:
             error_msg = e.stderr.decode('utf-8') if e.stderr else "Unknown Error"
-            print(f"\n❌ Edge-TTS Error: {error_msg}")
+            print(f"\nEdge-TTS Error: {error_msg}")
             raise RuntimeError(f"Edge-TTS failed to generate audio. Is it installed? (pip install edge-tts)")
             
-        print(f"✅ TTS output saved successfully to {output_path}")
+        print(f"TTS output saved successfully to {output_path}")
 
-# Singleton dictionary wrapper to maintain instances
 _tts_instances = {}
 
 def generate_hindi_audio(text: str, output_path: str, gender: str = "female"):

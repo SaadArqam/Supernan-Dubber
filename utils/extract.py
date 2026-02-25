@@ -14,10 +14,9 @@ def extract_clip(input_video, output_video, start_time="00:00:15", duration="15"
         output_video
     ]
     subprocess.run(cmd, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-    print(f"✅ Clip saved to {output_video}")
+    print(f"Clip saved to {output_video}")
 
 def extract_audio(input_video, output_audio):
-    """Extracts 16kHz mono audio for Whisper optimization."""
     print(f"Extracting audio to {output_audio}...")
     cmd = [
         "ffmpeg", "-y",
@@ -27,10 +26,9 @@ def extract_audio(input_video, output_audio):
         output_audio
     ]
     subprocess.run(cmd, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-    print(f"✅ Audio extracted to {output_audio}")
+    print(f"Audio extracted to {output_audio}")
 
 def merge_audio(video_path, audio_path, output_path):
-    """Merges the new Hindi TTS audio back into the video, strictly bounded to the shortest stream."""
     print(f"Merging {audio_path} into {video_path}...")
     cmd = [
         "ffmpeg", "-y",
@@ -44,4 +42,4 @@ def merge_audio(video_path, audio_path, output_path):
         output_path
     ]
     subprocess.run(cmd, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-    print(f"✅ Merged video saved to {output_path}")
+    print(f"Merged video saved to {output_path}")
