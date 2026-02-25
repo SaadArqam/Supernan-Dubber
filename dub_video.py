@@ -10,9 +10,7 @@ def run_dubbing_pipeline():
     print("🎬 STARTING PRODUCTION-GRADE DUBBING PIPELINE 🎬")
     print("="*60)
 
-    # Intelligent path detection:
-    # 1. First check if input.mp4 exists in the current Colab root directory
-    # 2. If not, fallback to the Google Drive folder
+
     if os.path.exists("input.mp4"):
         INPUT_VIDEO = "input.mp4"
         print("📁 Found 'input.mp4' in root directory.")
@@ -51,7 +49,7 @@ def run_dubbing_pipeline():
     merge_audio(CLIP_VIDEO, HINDI_AUDIO, OUTPUT_VIDEO)
 
     print("\n" + "="*60)
-    print(f"🎉 PIPELINE COMPLETE! Download your mapped video: {OUTPUT_VIDEO}")
+    print(f"PIPELINE COMPLETE! Download your mapped video: {OUTPUT_VIDEO}")
     print("="*60)
 
 if __name__ == "__main__":
